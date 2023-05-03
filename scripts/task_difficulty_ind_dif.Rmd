@@ -1,6 +1,6 @@
 ---
-title             : "Task difficulty and individual differences in picture naming speed"
-shorttitle        : "Task difficulty in picture naming"
+title             : "Influences of cognitive skills and task difficulty on picture naming speed"
+shorttitle        : "Cognitive skills and picture naming"
 
 author: 
   - name          : "Pamela Fuhrmeister"
@@ -31,7 +31,7 @@ authornote: |
   This research was funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) – project number 317633480 – SFB 1287, Project B05 (Bürki). 
 
 abstract: |
-  Studies show a wide range of individual variability in the time it takes speakers to produce a word or short phrase (e.g., in picture naming tasks). This variability in language production has often been attributed to variability in cognitive skills, such as attention, working memory, or inhibition. However, these skills are not necessarily unitary constructs, and different tasks that measure a certain construct (e.g., inhibition) may measure different aspects of the skill. There is also some evidence (e.g., from dual-task paradigms) that the relationships between cognitive skills and language production are more apparent with more demanding production tasks. In two experiments, we examined the relationship between a variety of cognitive measures (thought to tap into different aspects of these cognitive skills) and picture naming speed. In one of the experiments, the role of task difficulty was also probed by manipulating the perceived amount of time participants were given to name a picture. Only one significant correlation was found between a measure of cognitive skills (sustained attention) and picture naming speed; however, this was not replicated in the second experiment. We discuss the implications of these findings with respect to statisitcal power, reliability, and the specific tasks used to measure cognitive skills.
+  Studies show a wide range of individual variability in the time it takes speakers to produce a word or short phrase (e.g., in picture naming tasks). This variability in language production has often been attributed to variability in cognitive skills, such as attention, working memory, or inhibition. However, these skills are not necessarily unitary constructs, and different tasks that measure a certain construct (e.g., inhibition) may measure different components of the skill. There is also some evidence (e.g., from dual-task paradigms) that the relationships between cognitive skills and language production are more apparent with more demanding production tasks. In two experiments, we examined the relationship between a variety of cognitive measures (thought to tap into different aspects of the cognitive skills they measure) and picture naming speed. In the second experiment, the role of task difficulty was also probed by manipulating the perceived amount of time participants were given to name a picture. In the first experiment, one significant correlation was found between a measure of cognitive skills (sustained attention) and picture naming speed; however, this was not replicated in the second experiment. We discuss the implications of these findings with respect to statisitcal power, reliability, and the specific tasks used to measure cognitive skills.
 
   
 keywords          : "language production, individual differences, cognitive skills, picture naming"
@@ -55,17 +55,22 @@ output            :
     latex_engine: xelatex
 ---
 
-```{r setup, include = FALSE}
+```{r setup}
 library(papaja)
 library(tidyverse)
 library(kableExtra)
 library(ggthemes)
 library(data.table)
 library(GGally)
+library(lme4)
+library(lmerTest)
+library(broom.mixed)
+library(ggExtra)
+library(cowplot)
 r_refs("r-references.bib")
 
 knitr::opts_chunk$set(echo = TRUE)
-theme_set(theme_few(base_size = 10))
+theme_set(theme_few(base_size = 12))
 
 # functions we'll need for the analyses
 
@@ -123,42 +128,44 @@ lowerFn <- function(data, mapping, method = "lm", ...) {
 
 ```
 
-Speaking is a well-practiced activity that, under many circumstances, feels fairly effortless. However, there is ample evidence that speaking does not necessarily happen automatically and may be at least partially dependent on available cognitive resources. For instance, speaking can interfere with a simultaneous task, such as driving a vehicle [e.g., @kubose2006effects] because it takes cognitive resources away from driving [@strayer2001driven]. Many laboratory studies of language production report a large amount of individual variability in how quickly speakers can, for example, name a picture [@burki2017electrophysiological; @laganaro2012time; @valente2014erp], and this variability has been assumed to reflect differences in cognitive resources or abilities [e.g., @jongman2017sustained; @jongman2015role; @jongman2015sustained; @piai2013working; @shao2012sources; @shao2013selective; @shao2014electrophysiological; @shao2015selective; @sikora2016executive].
+Speaking is a well-practiced activity that, under many circumstances, feels fairly effortless. However, there is ample evidence that speaking does not necessarily happen automatically and may be at least partially dependent on available cognitive resources. For instance, speaking can interfere with a simultaneous task, such as driving a vehicle [e.g., @kubose2006effects] because it diverts cognitive resources away from driving [@strayer2001driven]. Many laboratory studies of language production report a large amount of individual variability in how quickly speakers can, for example, name a picture [@burki2017electrophysiological; @laganaro2012time; @valente2014erp], and this variability has been assumed to reflect differences in cognitive resources or abilities [e.g., @jongman2017sustained; @jongman2015role; @jongman2015sustained; @piai2013working; @shao2012sources; @shao2013selective; @shao2014electrophysiological; @shao2015selective; @sikora2016executive].
 
 ## Cognitive abilities that predict speed of language production
 
-Several studies have shown that how quickly an individual can produce words or short phrases is related to more general cognitive skills, including attention [@jongman2015role; @jongman2015sustained; @jongman2017sustained], working memory [@lorenz2019age; @piai2013working; @shao2012sources; but see @klaus2018investigation], and inhibition [@shao2012sources; @shao2013selective; @shao2014electrophysiological; @shao2015selective; @sikora2016executive]. For the current study, we are interested in how generalizable these relationships are, specifically, whether we find similar relationships between picture naming speed and cognitive tasks when employing a wider battery of cognitive tests that are thought to measure these constructs. As we discuss in more detail in the next section, some tasks that have been used to measure certain cognitive skills do not necessarily correlate well with each other. For example, Flanker and Simon tasks are both thought to measure inhibition, but correlations between these measures are consistently low [e.g., @paap2014bilingual]. A skill like inhibition (like other cognitive abilities) is not a unitary construct, and different tasks may very well tap into different types or components of inhibition. 
+Several studies have shown that how quickly an individual can produce words or short phrases is related to more general cognitive skills, including attention [@jongman2015role; @jongman2015sustained; @jongman2017sustained], working memory [@lorenz2019age; @piai2013working; @shao2012sources; but see @klaus2018investigation], and inhibition [@shao2012sources; @shao2013selective; @shao2014electrophysiological; @shao2015selective; @sikora2016executive]. For the current study, we are interested in how generalizable these relationships are, specifically, whether we find similar relationships between picture naming speed and cognitive tasks when employing a wider battery of cognitive tests that are thought to measure these constructs. As we discuss in more detail in the next section, some tasks that have been used to measure certain cognitive skills do not necessarily correlate well with each other. For example, Flanker and Simon tasks are both thought to measure inhibition, but correlations between these measures are consistently low [e.g., @paap2014bilingual]. A skill like inhibition (like other cognitive abilities) is not a unitary construct, and different tasks may very well tap into different types or components of inhibition.
 
-This provides an opportunity to learn more about which aspects or components of inhibition, working memory, or attention are involved in language production. In the following sections, we will give an overview of the cognitive functions that have been found to correlate with language production speed (working memory, inhibition, and sustained attention), and we will discuss tasks that are often used to measure these constructs. 
+This provides an opportunity to learn more about which aspects or components of inhibition, working memory, or attention are involved in language production. For instance, we ask whether scores on cognitive tasks performed in different domains (e.g., linguistic, non-linguistic, auditory, visual) thought to measure a similar construct or tasks that likely tap into different aspects of a skill similarly predict word production speed. In the following sections, we will give an overview of the cognitive functions (working memory, inhibition, and sustained attention) that have been found to correlate with language production speed, and we will discuss tasks that are often used to measure these constructs. 
 
 ### Working memory
 
 Working memory can be described as the ability to hold information in mind and manipulate it in order to perform a cognitive task [e.g., @baddeley1992working; @baddeley2010working]. Commonly used tasks to evaluate working memory include, for example, span tasks [e.g., @conway2005working]. In span tasks, participants are asked to remember target items whose presentation alternates with distractor items or another task. For instance, the operation span task consists of the alternating presentation of a letter and an arithmetic problem. Participants are asked to solve each math problem and to recall all letters at the end of a sequence [e.g., @unsworth2005automated]. Given that this task requires the participant to recall verbal material, it is often used to determine whether participants' performance on a linguistic task correlates or is predicted by working memory scores. In other tasks, participants are asked to remember the positions of a shape on a grid [symmetry span task, e.g., @unsworth2009complex] or the length and directions of arrows [rotation span task, @harrison2013working].
 
-@shao2012sources found a correlation between participants’ performance on the operation span task and their speed of naming pictures of actions (though not pictures of objects), suggesting that working memory is at least partially involved with word production. However, as suggested by various authors [@conway2005working; @engle1999working; @shipstead2012working], participants’ scores on span tasks are not completely independent from the demands of the task. For instance, two participants with the same working memory capacities but different arithmetic skills will likely obtain different scores on the operation span task. Therefore, it is of interest to test whether other types of span tasks (e.g., rotation or symmetry) are also related to picture naming speed, as the demands of the distractor items in these tasks may influence participants’ scores on the tasks.
+@shao2012sources found a correlation between participants’ performance on the operation span task and their speed of naming pictures of actions (though not pictures of objects), suggesting that working memory is at least partially involved with word production. However, as suggested by various authors [@conway2005working; @engle1999working; @shipstead2012working], participants’ scores on span tasks are not completely independent from the demands of the task. For instance, two participants with the same working memory capacities but different arithmetic skills will likely obtain different scores on the operation span task. Therefore, it is of interest to test whether other types of span tasks (e.g., rotation or symmetry) are also related to picture naming speed, as the demands of the distractor items in these tasks may influence participants’ scores on the tasks. In the current study, we tested participants' working memory ability with three span task: the operation span, symmetry span, and rotation span tasks (see the Methods section for more details).
 
 ### Inhibition
 
-Inhibition is described as the ability to resolve conflicts and suppress irrelevant information. Recent studies, however, suggest that inhibition is not a unitary construct  [@rey2018inhibition; @rouder2019psychometrics]. For instance, inhibition can be characterized as being selective or non-selective [@shao2013selective; @shao2015selective]. Non-selective inhibition is the ability to inhibit any unwanted response [@de1995strategies], while selective inhibition describes the ability to inhibit a more specific response that directly competes with the desired response. Several authors further subdivide selective inhibition into two different types: stimulus-stimulus conflict and stimulus-response conflict [@hommel1997interactions; @kornblum1994way; @scerrati2017comparing]. Stimulus-stimulus conflicts arise from an incompatibility between overlapping task-relevant and task-irrelevant features of the stimulus to be processed, while stimulus-response conflicts arise from an overlap of incongruent stimulus and response features [@kornblum1994way].
+Inhibition is described as the ability to resolve conflicts and suppress irrelevant information. Recent studies, however, suggest that inhibition is not a unitary construct  [@rey2018inhibition; @rouder2019psychometrics]. For instance, inhibition can be characterized as being selective or non-selective [@shao2013selective; @shao2015selective]. Non-selective inhibition is the ability to inhibit any unwanted response [@de1995strategies], while selective inhibition describes the ability to inhibit a more specific response that directly competes with the desired response [@forstmann2008function]. Several authors further subdivide selective inhibition into two different types: stimulus-stimulus conflict and stimulus-response conflict [@hommel1997interactions; @kornblum1994way; @scerrati2017comparing]. Stimulus-stimulus conflicts arise from an incompatibility between overlapping task-relevant and task-irrelevant features of the stimulus to be processed (e.g., in a Flanker task), while stimulus-response conflicts arise from an overlap of incongruent stimulus and response features [e.g., in a Simon task, @kornblum1994way].
 
-Measures of both selective and non-selective inhibition have been found to correlate with picture naming speed or the magnitude of experimental effects in a picture naming task [@shao2013selective; @shao2015selective]. For instance, @shao2013selective measured non-selective inhibition by means of a stop-signal reaction time task [@logan1984ability], which is thought to assess the ability to inhibit a motor response that has already been initiated, i.e., a non-linguistic response. On this task, participants are asked to respond to a stimulus presented, but on a certain proportion of the trials, they hear a tone to indicate they should withhold their response on that trial. @shao2013selective report correlations between performance on the stop-signal reaction time task and word production speed, suggesting that the relationship between language production and non-selective inhibition may not be specific to the language domain.
+Measures of both selective and non-selective inhibition have been found to correlate with picture naming speed or the magnitude of experimental effects in a picture naming task [@shao2013selective; @shao2015selective]. For instance, @shao2013selective measured non-selective inhibition by means of a stop-signal reaction time task [@logan1984ability], which is thought to assess the ability to inhibit a motor response that has already been initiated, i.e., a non-linguistic response. On this task, participants are asked to respond to a stimulus presented, but on a certain proportion of the trials, they hear a tone to indicate they should withhold their response on that trial. @shao2012sources and @shao2013selective reported that participants' performance on the stop-signal reaction time task correlated with picture naming speed, suggesting that the relationship between language production and non-selective inhibition may not be specific to the language domain. However, this correlation was not replicated in @shao2015selective.
 
-@shao2013selective [-@shao2015selective] measured selective inhibition using a within-task measure derived from distributional properties of the task. In those studies, participants performed a picture-word-interference task, in which they named pictures with printed distractor words overlayed on them. The distractor words were either semantically related or unrelated to the target word. Participants typically need more time to produce words when they see semantically related distractors than unrelated distractors [i.e., the semantic interference effect, see @burki2020did for review]. @shao2013selective [-@shao2015selective] used the delta plot procedure [@ridderinkhof2004response; @ridderinkhof2005delta] to compute a measure of inhibition, which can be understood as the change in the semantic interference effect over the trials in the experiment with the slowest response times. @shao2013selective [-@shao2015selective] found that this within-task measure of inhibition correlated with the magnitude of the semantic interference effect in a picture-word interference task, as well as in a semantic blocking task [@shao2015selective]. 
+@shao2013selective [-@shao2015selective] measured selective inhibition using a within-task measure derived from distributional properties of the task. In those studies, participants performed a picture-word interference task, in which they named pictures with printed distractor words overlayed on them. The distractor words were either semantically related or unrelated to the target word. Participants typically need more time to produce words when they see semantically related distractors than unrelated distractors [i.e., the semantic interference effect, see @burki2020did for review]. @shao2013selective [-@shao2015selective] used the delta plot procedure [@ridderinkhof2004response; @ridderinkhof2005delta] to compute a measure of inhibition, which can be understood as the change in the semantic interference effect over the trials in the experiment with the slowest response times. @shao2013selective [-@shao2015selective] found that this within-task measure of inhibition correlated with the magnitude of the semantic interference effect in a picture-word interference task, as well as in a semantic blocking task [@shao2015selective]. 
 
-While it is certainly intuitive that inhibition is needed for a task such as the picture-word interference task, we showed using simulated data that the correlation between this within-task measure of inhibition and the semantic interference effect arises as a mere consequence of the distributional properties of the data [@fuhrmeister2022distributional]. Specifically, the semantic interference effect is largest in the slowest responses; therefore, it is not surprising that this measure that is computed in part with the effect size over the slowest trials correlates strongly with the mean semantic interference effect. Especially since @shao2014electrophysiological found a correlation between the size of the semantic interference effect and the ERP N2 component (thought to reflect inhibition), it is certainly possible that selective inhibition is involved in language production; however, we need different measures of inhibition to support this idea. In the current study, we have two different measures of selective inhibition that we will correlate with picture naming speed to further test this assumption.
+It is certainly intuitive that inhibition may be needed for a task such as the picture-word interference task and possibly language production more generally, as some theories of production assume lexical selection is a competitive process [e.g., @levelt1999theory]. However, we showed using simulated data that the correlation between this within-task measure of inhibition and the semantic interference effect arises as a mere consequence of the distributional properties of the data [@fuhrmeister2022distributional]. Specifically, the semantic interference effect is largest in the slowest responses; therefore, it is not surprising that this measure that is computed in part with the effect size over the slowest trials correlates strongly with the mean semantic interference effect. It is certainly possible that selective inhibition is involved in language production; however, we need different measures of inhibition to support this idea. @shao2014electrophysiological have an additional study where participants named pictures with low and high name agreement (the number of possible names for pictures; low = more possible names). They found a more negative N2 (an electrophysiological component thought to reflect inhibition) for pictures with low name agreement, and with low name agreement, participants likely have to inhibit the other possible names for the picture. 
+
+In the present study, we used the stop-signal reaction time task to measure non-selective inhibition, as well as two different measures of selective inhibition (Flanker and Simon tasks) that, as discussed above, are thought to measure stimulus-stimulus (Flanker) and stimulus-response conflict (Simon) within the construct of selective inhibition (see the Methods section for more details).
 
 ### Attention
 
-Sustained attention describes the ability to maintain alertness to detect infrequent events over a long period of time [@sarter2001cognitive]. Several studies have found relationships between measures of sustained attention and language production [@jongman2015role; @jongman2015sustained]. For example, Jongman and colleagues have used measures of sustained attention with geometrical shapes [@jongman2015sustained] or digits [@jongman2015sustained; @jongman2015role]. In addition, they have used both visual and auditory variations of a sustained attention task and found that both variations correlated with word production speed [@jongman2015sustained]. This provides some evidence that relationships between sustained attention and language production measures may reflect more general attention abilities and may not be specific to a certain domain. 
+Sustained attention describes the ability to maintain alertness to detect infrequent events over a long period of time [@sarter2001cognitive]. A common task to measure sustained attention is the continuous performance task, in which participants attend to a large number of stimuli and are asked to detect rare target stimuli. Several studies have found relationships between measures of sustained attention and language production [@jongman2015role; @jongman2015sustained]. For example, Jongman and colleagues have used variations of the continuous performance task with geometrical shapes [@jongman2015sustained] and digits [@jongman2015sustained; @jongman2015role]. In addition, @jongman2015sustained have utilized both visual and auditory variations of this task and found that both variations correlated significantly with each other and with picture naming speed [@jongman2015sustained]. This provides some evidence that relationships between sustained attention and language production measures may reflect more general attention abilities and may not be specific to a certain domain. 
+
+A disadvantage of the continuous performance task is that it generates very few errors [see e.g., @jongman2015sustained]. For this reason, we chose a different sustained attention task for the present study, namely the continuous time expectancy task, which typically generates more errors [@o2009uncovering]. In this task, participants have to monitor a flow of alternating visual patterns and detect patterns that are presented for a longer duration than the others. In order to compare our results to previous findings [@jongman2015role; @jongman2015sustained], we also asked participants to perform a conjunctive continuous performance task [@shalev2011conjunctive]. In this task, participants see a series of visual symbols in different shapes and colors, and their task is to respond when they see a specific shape with a specific color. Because participants have to pay attention to both shape and color, this task has been argued to increase attentional demands as compared to a continuous performance task [@shalev2011conjunctive]. We provide more details on these tasks in the Methods section.
+
 
 # Experiment 1
 
-The goal of the current study is to extend previous findings on the relationship between cognitive skills and word production and to test how generalizable these relationships are. As discussed above, some tasks thought to measure a common construct do not necessarily correlate with each other, suggesting they measure different aspects of the skill. This provides an opportunity to better understand relationships between cognitive skills and word production. For instance, we ask whether cognitive tasks performed in different domains (e.g., linguistic, non-linguistic, auditory, visual) thought to measure a similar construct similarly predict word production speed. 
+The goal of the current study is to extend previous findings on the relationship between cognitive skills and word production and to test how generalizable these relationships are. In the first experiment, participants performed a picture-word interference task, in which they named pictures with printed distractor words superimposed on the pictures. The task included several conditions: a baseline condition, in which participants saw a line of Xs printed on the picture; a semantic condition, in which participants saw a distractor that was either semantically related or unrelated to the picture; and a phonological condition, in which participants saw a distractor that was either phonologically related or unrelated to the target. The picture naming data have been reported elsewhere [@burki2022picture; @fuhrmeister2022behavioral]. For the present purposes, we analyzed only trials in the baseline condition to test whether measures of working memory, inhibition, or attention predict speed of simple picture naming.
 
-<!-- Should we even give this much detail here about the task? -->
-In the first experiment, participants performed a picture-word interference task, in which they named pictures with printed distractor words superimposed on the pictures. The task included several conditions: a baseline condition, in which participants saw a line of Xs printed on the picture; a semantic condition, in which participants saw a distractor that was either semantically related or unrelated to the picture; and a phonological condition, in which participants saw a distractor that was either phonologically related or unrelated to the target. The picture naming data have been reported elsewhere [@burki2022picture; @fuhrmeister2022behavioral]. For the present reanalysis, we analyze only trials in the baseline condition to test whether measures of working memory, inhibition, or attention predict speed of simple picture naming.
-
-# Method
+# Methods
 
 ## Participants
 
@@ -166,7 +173,7 @@ A total of 45 participants (ages 18-30, mean age = 23, *SD* = 3.51) were recruit
 
 ## Procedure
 
-Participants performed several tasks over three different sessions. In the first session, participants completed a picture-word interference task, a delayed naming task, and a word naming task (i.e., reading aloud). Again, only the baseline condition of the picture-word interference task is reported here. The continuous EEG was also recorded during the picture-word interference task, but those data are also reported elsewhere [@fuhrmeister2022behavioral]. In the second and third sessions of the experiment, the following cognitive tests were administered: the German MWT-B [Mehrfachwahl-Wortschatztest, Version B, @lehrl1975mehrfachwahl], the coding subtest of the Wechsler Adult Intelligence Scale--Fourth Edition [WAIS-IV, @wechsler2008wechsler], the digit span forward and backward subtest of the Wechsler Memory Scale Revised [@wechsler1987wechsler], and the Corsi Block-Tapping Task forward and backward. These tests are part of the battery of tests used in an institutional project on variability in language and are used to allow comparisons across age groups and to screen potential control participants for projects that involve participants with aphasia. These tests were not analyzed in the present study and will not be reported further. During the third session, participants performed eight cognitive tasks (see Table \@ref(tab:cogskillsdesstats)) to test for relationships between measures of cognitive functions and performance on the language production task.
+In the first session, participants completed a picture-word interference task, a delayed naming task, and a word reading task (i.e., reading aloud). Again, only the baseline condition of the picture-word interference task is reported here. The continuous EEG was also recorded during the picture-word interference task, but those data are also reported elsewhere [@fuhrmeister2022behavioral]. In a subsequent session, participants performed the following cognitive tasks in this order to test for relationships between measures of cognitive functions and performance on the language production task (see also Table \@ref(tab:cogskillsdesstats)): operation span, symmetry span, rotation span, continuous time expectancy task, Simon task, Flanker task, conjunctive continuous performance task, stop-signal reaction time task.^[The following cognitive tests were also administered: the German MWT-B [Mehrfachwahl-Wortschatztest, Version B, @lehrl1975mehrfachwahl], the coding subtest of the Wechsler Adult Intelligence Scale--Fourth Edition [WAIS-IV, @wechsler2008wechsler], the digit span forward and backward subtest of the Wechsler Memory Scale Revised [@wechsler1987wechsler], and the Corsi block-tapping task forward and backward [@corsi1972human]. This battery of tests was used for an institutional project on variability in language to compare across age groups and to screen potential control participants for projects that involve participants with aphasia. These tests were not analyzed in the present study and will not be reported further.]
 
 ## Stimuli and task descriptions
 
@@ -184,113 +191,77 @@ Following previous work on the relationship between language production and doma
 
 #### Span tasks
 
-We administrated two blocks of each span task (operation span, symmetry span, and rotation span), following the recommendations of @foster2015shortened^[These tasks are available from the Georgia Tech Attention and Working Memory Lab website (http://englelab.gatech.edu). We used their scripts to implement the tasks in OpenSesame [@mathot2012opensesame] for stimulus presentation.]. Recall that each task consists of sequences of target and distractor items, and participants are asked to respond to distractor items (e.g., solve a math problem). At the end of each sequence, participants attempted to recall all target items in the order they were presented. 
+To measure participants' working memory abilities, we administrated three span tasks: operation span, symmetry span, and rotation span. Following the recommendations of @foster2015shortened, we had participants complete two blocks of each span task^[These tasks are available from the Georgia Tech Attention and Working Memory Lab website (http://englelab.gatech.edu). We used their scripts to implement the tasks in OpenSesame [@mathot2012opensesame] for stimulus presentation.]. Recall that each task consists of sequences of target and distractor items, and participants are asked to respond to distractor items (e.g., solve a math problem). At the end of each sequence, participants attempted to recall all target items in the order they were presented. 
 
-As discussed in the introduction, the operation span task consists of target items (letters to be recalled) and distractor items (math problems). The target and distractor items are presented in alternating order, and participants are asked to recall the letters in the order they were presented. In the symmetry span task, a sequence consists of the alternating presentation of a 4x4 grid containing a single square and a geometrical shape that may or may not be symmetrical relative to the vertical axis. The positions of the squares in the 4x4 grid are the target items, and the symmetrical or asymmetrical geometrical shapes are the distractor items. After each geometrical shape, participants must determine whether the shape was symmetrical or not. After each sequence, participants are asked to recall the positions of the squares in the 4x4 grid. In the rotation span task, a sequence consists of a rotated letter that can be vertically reversed or not and of an arrow (long or short) pointing in one of 8 possible directions. Arrow lengths and directions are the target items, and rotated letters are the distractor items. After each distractor item, participants must determine whether the letter was reversed or not. Following the presentation of a sequence, participants are asked to recall the lengths and directions of the arrows. 
+As discussed in the introduction, the operation span task consists of target items (letters to be recalled) and distractor items (math problems). The target and distractor items are presented in alternating order, and participants are asked to recall the letters in the order they were presented. In the symmetry span task, a sequence consists of the alternating presentation of a 4x4 grid containing a single square and a geometrical shape that may or may not be symmetrical relative to the vertical axis. The positions of the squares in the 4x4 grid are the target items, and the symmetrical or asymmetrical geometrical shapes are the distractor items. After each geometrical shape, participants must determine whether the shape was symmetrical or not. At the end of each sequence, participants are asked to recall the positions of the squares in the 4x4 grid. In the rotation span task, a sequence consists of an arrow (long or short) pointing in one of eight possible directions and a rotated letter that can be vertically reversed or not. Arrow lengths and directions are the target items, and rotated letters are the distractor items. For each distractor item, participants must determine whether the letter was reversed or not. At the end of the sequence, participants are asked to recall the lengths and directions of the arrows. 
 
 To determine the length of a sequence in the span tasks, we followed recommendations from @draheim2018item. In the operation span task, the length of a sequence varied from three to eight items; in the symmetry span task, from two to six items; and in the rotation span task, from two to five items. Each block contained sequences of all possible lengths, and each block was repeated for each task (i.e., two blocks total per task).
+
+To compute span scores, we used the partial-credit unit scoring procedure as described in @conway2005working. For this procedure, participants receive "partial credit" for any recalled target items in a sequence, which is computed as the proportion of correctly recalled target items in a sequence. For example, in a sequence with four items to recall, if the participant correctly recalls two, they would get a score of .5 for that sequence. The proportions of correctly recalled target items are then averaged together for each block. We administered two blocks of each task, so we computed the mean scores of the two blocks for each participant and each span task separately to enter into further analyses.
 
 #### Stop-signal reaction time task
 
 As described briefly above, the stop-signal reaction time task is thought to measure non-selective inhibition, i.e., the suppression of any unwanted or irrelevant response [@de1995strategies]. In this task, participants are asked to respond to various stimuli ("go" trials), but on some trials, they are asked to inhibit their response ("no-go" trials).
 
-During the go trials, a fixation cross was displayed for 250 ms at the center of the screen and then replaced by either the symbol "<" or the symbol ">". Participants were instructed to press a left keyboard key after the onset of the "<" symbol and a right keyboard key after the onset of the ">" symbol. During the no-go trials, a tone (750Hz, lasting 75 ms) sounded shortly after the onset of the visual symbols, indicating to the participants that they should not respond on these trials. This was an adaptive task: At the beginning of the procedure, the delay between the onset of the visual symbol and the onset of the tone (i.e., the stop signal delay) was 250 ms (i.e., the tone was displayed 250 ms after the onset of the visual symbol). The stop signal delay was then adjusted depending on the participant's performance. Following successful inhibition, the stop signal delay was increased by 50 ms. When participants failed to inhibit the response on a no-go trial, the stop signal delay was reduced by 50 ms. 
+During the go trials, a fixation cross was displayed for 250 ms at the center of the screen and then replaced by either the symbol "<" or the symbol ">". Participants were instructed to press a left keyboard key after the onset of the "<" symbol and a right keyboard key after the onset of the ">" symbol. During the no-go trials, a tone (750Hz, lasting 75 ms) sounded shortly after the onset of the visual symbols, indicating to the participants that they should not respond on these trials. This was an adaptive task: At the beginning of the procedure, the delay between the onset of the visual symbol and the onset of the tone (i.e., the stop signal delay) was 250 ms (i.e., the tone was played 250 ms after the onset of the visual symbol). The stop signal delay was then adjusted depending on the participant's performance. Following successful inhibition, the stop signal delay was increased by 50 ms. When participants failed to inhibit the response on a no-go trial, the stop signal delay was reduced by 50 ms. 
 
 Following the recommendations of @matzke2018stop, the task started with a familiarization block of 20 go trials. Then, participants performed a practice block with 18 go trials and 6 no-go trials. For this practice block, participants were instructed to not slow down their responses on go trials [@matzke2018stop]. Three experimental blocks followed, consisting of 48 go trials and 16 no go trials. Participants were asked to perform the task as quickly as possible.
 
+We computed scores on the stop signal reaction time task using the integration method [@verbruggen2013fictitious]. To do this, we first ordered the participants' reaction times on go trials from fastest to slowest. We then identified the reaction time that corresponded to the nth percentile, where n is defined as the percentage of the no-go trials that the participant incorrectly responded to [see also @hedge2018reliability for a clear description of this procedure]. For example, if a participant incorrectly responded on 40% of the no-go trials, we would compute the 40th percentile of their reaction time distribution of go trials. Finally, we subtracted the mean stop signal delay from the nth reaction time. We carried out this procedure per participant and experimental block and then computed the mean score over the three experimental blocks for each participant and entered this score into further analyses. Reaction times are reported in milliseconds.
 
 #### Flanker task
 
-In the Flanker task, an arrow pointing either to the left or to the right is presented at the center of the screen, and participants have to determine the direction of the arrow using the corresponding left or right arrow key on the keyboard. This central arrow is flanked either by arrows pointing in the same direction (>>>>>, congruent condition), the opposite direction (<<><<, incongruent condition), or by straight lines (-->--, neutral condition). Participants started with 18 training trials, six in each condition. There were four experimental blocks, each consisting of 46 congruent trials, 46 incongruent trials and 46 neutral trials [see @hedge2018reliability for justification regarding the number of trials in this task].
+To measure selective inhibition due to stimulus-stimulus conflict, participants completed a Flanker task. In this task, an arrow pointing either to the left or to the right is presented at the center of the screen, and participants have to determine the direction of the arrow using the corresponding left or right arrow key on the keyboard. This central arrow is flanked either by arrows pointing in the same direction ($>>>>>$, congruent condition), the opposite direction ($<<><<$, incongruent condition), or by straight lines ($-->--$, neutral condition). Participants started with 18 training trials, six in each condition. There were four experimental blocks, each consisting of 46 congruent trials, 46 incongruent trials and 46 neutral trials [see @hedge2018reliability for justification regarding the number of trials in this task].
+
+For each participant, we computed a measure of reaction time cost in milliseconds. We first removed trials with incorrect responses. Then we computed the reaction time cost by subtracting each participant's mean reaction time of the congruent trials from their mean reaction time of the incongruent trials.
 
 #### Simon task
 
-In the Simon task, participants started with a familiarization phase of 40 trials. During this phase, a blue (50% of trials) or red circle appeared in the center of the screen. Participants had to press a key on the left hand side of the keyboard upon seeing a blue circle and on the right hand side upon seeing a red circle. They were asked to respond as quickly as possible. The familiarization phase was followed by a practice phase with 56 trials. A trial started by the presentation of a fixation cross located at the center of the screen for 500ms. Then a blue or red circle appeared either on the left-hand or right-hand side of the fixation cross. Trials with the blue circle appearing on the left-hand side or with a red circle appearing on the right hand side are called congruent trials, because the position of the circle and the correct response key are on the same side. Conversely, trials where the blue circle appears on the right-hand side or a red circle on the left-hand side are called incongruent trials. During this practice phase, there were 42 congruent trials (21 blue and 21 red circles), and 12 incongruent trials (6 blue and 6 red circles). After the practice phase, participants performed the same task in two experimental blocks of 120 trials each, with 90 congruent trials and 30 incongruent trials [see @wostmann2013reliability on the selection of the number of trials].
+The Simon is also a task thought to measure selective inhibition but the inhibition in this task is due to stimulus-response conflict. In the task we administered, participants saw either a blue or red circle on either the left- or right-hand side of a computer screen. Their task was to press a key on the left-hand side of the keyboard upon seeing a blue circle and on the right-hand side upon seeing a red circle, and they were asked to respond as quickly as possible. Trials with the blue circle appearing on the left-hand side or with a red circle appearing on the right-hand side are called congruent trials, because the position of the circle and the correct response key are on the same side. Conversely, trials where the blue circle appears on the right-hand side of the screen or a red circle on the left-hand side are called incongruent trials.
+
+Participants started with a familiarization phase of 40 trials. During this phase, a blue (50% of trials) or red circle appeared in the center of the screen, and they were asked to press the corresponding key on the keyboard. Then participants completed a practice phase with 56 trials. A trial started with the presentation of a fixation cross located at the center of the screen for 500ms. Then a blue or red circle appeared either on the left-hand or right-hand side of the fixation cross, and participants were instructed to indicate their response with the appropriate key. During this practice phase, there were 42 congruent trials (21 blue and 21 red circles), and 12 incongruent trials (6 blue and 6 red circles). After the practice phase, participants performed the same task in two experimental blocks of 120 trials each, with 90 congruent trials and 30 incongruent trials [see @wostmann2013reliability on the selection of the number of trials].
+
+The procedure for computing the reaction time cost was the same as for the Flanker task.
 
 #### Conjunctive continuous performance task
 
-In this task, participants see a flow of visual symbols that vary in shapes (i.e. squares, triangles, stars, circles) and in color (i.e. blue, green, red, yellow). Participants must press a button as soon as they see a red square. We followed the procedure outlined in @shalev2011conjunctive. The task included 320 trials: 30% of trials contained the target (i.e., the red square); 17.5% of trials contained red, non-square symbols; 17.5% of trials contained square, non-red symbols, and the remainder of the trials contained non-red and non-square symbols. The inter-trial interval ranged from 1000 ms to 2500 ms, by steps of 500 ms. 
+In this sustained attention task, participants see a flow of visual symbols that vary in shapes (i.e. squares, triangles, stars, circles) and in color (i.e. blue, green, red, yellow). Participants must press a button as soon as they see a red square. We followed the procedure outlined in @shalev2011conjunctive. The task included 320 trials: 30% of trials contained the target (i.e., the red square); 17.5% of trials contained red, non-square symbols; 17.5% of trials contained square, non-red symbols, and the remainder of the trials contained non-red and non-square symbols. The inter-trial interval ranged from 1000 ms to 2500 ms, by steps of 500 ms. 
+
+We calculated the hit rate for each participant, which was the proportion of target trials that the participant correctly responded to.
 
 #### Continuous time expectancy task
 
-For this task, participants saw visual patterns and were asked to identify a pattern that was presented for a longer duration than the others. We used four visual patterns, as in @o2009uncovering. The standard duration in our task was set to 800ms, and the target duration was set to 1300ms. The procedure started with a familiarization block, followed by a training block, and ended with a single experimental block. During the familiarization block, 32 patterns appeared one by one on the screen. Four of these patterns were target patterns, while the other ones were standard patterns. Participants had to detect the target patterns but were not asked to respond. A training block followed only if participants reported that, during the familiarization block, they noticed some patterns (the target) lasting longer than the other ones. During the training block, they were instructed to press the space bar as soon as they noticed a target. There were 24 trials and among them, 3 targets. If participants were unable to detect the three targets during the training block, they had to perform it again until they were able to detect every target. The experimental block consisted in 674 trials, with 84 targets. Distances between two deviant trials ranged from 4 to 10 trials, with 12 trials for each of these numbers. Following the presentation of a target, participants had to provide an answer within 700ms.
+For this second task measuring sustained attention, participants saw visual patterns and were asked to identify a pattern that was presented for a longer duration than the others. We used four visual patterns, as in @o2009uncovering. The standard duration in our task was set to 800ms, and the target duration was set to 1300ms. The procedure started with a familiarization block, followed by a training block, and ended with a single experimental block. During the familiarization block, 32 patterns appeared one by one on the screen. Four of these patterns were target patterns, while the other ones were standard patterns. Participants had to detect the target patterns but were not asked to respond. A training block followed only if participants reported that, during the familiarization block, they noticed some patterns (the target) lasting longer than the other ones. During the training block, they were instructed to press the space bar as soon as they noticed a target. There were 24 trials and among them, 3 targets. If participants were unable to detect the three targets during the training block, they had to perform it again until they were able to detect every target. The experimental block consisted in 674 trials, with 84 targets. Distances between two deviant trials ranged from 4 to 10 trials, with 12 trials for each of these numbers. Following the presentation of a target, participants had to provide an answer within 700ms.
+
+We again calculated the hit rate for each participant, which was the proportion of target trials that the participant correctly responded to.
 
 ## Analyses
 
-## Computing scores from cognitive measures
+### Picture naming measures and correlations
 
-## Picture naming measures and correlations
+To derive measures of picture naming speed, we estimated ex-gaussian parameters of each participant’s response time distribution, following previous work [@shao2013selective; @jongman2015role; @jongman2015sustained]. An ex-gaussian distribution often provides a good fit to reaction time data and is composed of three parameters: mu ($\mu$), sigma ($\sigma$), and tau ($\tau$). The $\mu$ and $\sigma$ parameters represent the mean and standard deviation of the Gaussian portion of the distribution, respectively, and the $\tau$ parameter represents the mean and standard deviation of the exponential part of the distribution [@balota2011moving; @tse2010effects]. The $\tau$ parameter can be understood conceptually as the proportion of abnormally slow responses, or the right tail of the reaction time distribution. We estimated ex-gaussian parameters for each participant separately using the mexgauss() function in the retimes package [@massidda2013package] in R [@R-base]. Only correct responses were included in the analyses of picture naming data.
 
-To derive measures of word production speed, we estimated ex-gaussian parameters of each participant’s response time distribution, following previous work [@shao2013selective; @jongman2015role; @jongman2015sustained]. An ex-gaussian distribution often provides a good fit to reaction time data and is composed of three parameters: $\mu$, $\sigma$, and $\tau$. The $\mu$ and $\sigma$ parameters represent the mean and standard deviation of the Gaussian portion of the distribution, respectively, and the $\tau$ parameter represents the mean and standard deviation of the exponential part of the distribution [@balota2011moving; @tse2010effects]. The $\tau$ parameter can be understood conceptually as the proportion of abnormally slow responses, or the right tail of the reaction time distribution. We estimated ex-gaussian parameters for each participant separately using the mexgauss() function in the retimes package [@massidda2013package] in R [@R-base]. We then tested for correlations between the ex-gaussian parameters $\mu$ and $\tau$ and measures of cognitive skills ($\mu$ and $\tau$ because we do not have theoretical motivation to think that we should find relationships between cognitive skills and variance). We acknowledge that this approach leads to a number of statistical tests being done, which can inflate Type I error rates. However, because we do not know which cognitive tests these relationships will generalize to, it is important to fully explore these relationships. Therefore we view Experiment 1 as an exploratory endeavor, in which we will first pinpoint plausible extensions of the relationships found previously in the literature by reporting correlations without correcting for multiple comparisons. We will replicate relationships found in Experiment 1 in a confirmatory manner in Experiment 2. All analyses were performed in R [@R-base], and pre-processed data and analysis scripts are publicly available in the OSF repository at https://osf.io/4ftex/. 
+We then tested for correlations between the ex-gaussian parameters $\mu$ and $\tau$ and measures of cognitive skills ($\mu$ and $\tau$ because we do not have theoretical motivation to think that we should find relationships between cognitive skills and variance). We acknowledge that this approach leads to a number of statistical tests being done, which can inflate Type I error rates. However, because we do not know which cognitive tests these relationships will generalize to, it is important to fully explore these relationships. Therefore we view Experiment 1 as an exploratory endeavor, in which we will first pinpoint plausible extensions of the relationships found previously in the literature by reporting correlations without correcting for multiple comparisons. We will replicate relationships found in Experiment 1 in a confirmatory manner in Experiment 2. All analyses were performed in R [@R-base], and pre-processed data and analysis scripts are publicly available in the OSF repository at https://osf.io/4ftex/. 
 
-# Results
-
-## Descriptive statistics
-
-We first calculated descriptive statistics (mean and standard deviation) of all of the cognitive measures to determine whether there is a sufficient amount of variability among participants to obtain meaningful correlations with each of the measures. In Table \@ref(tab:cogskillsdesstats) we report the mean and standard deviation of each of the measures, and a histogram of the scores can be seen in Figure \@ref(fig:exp1hist). Visual inspection of the histograms suggests a ceiling effect for the conjunctive continuous performance task, which is confirmed by the descriptive statistics (*M* = 1.00, *SD* = .01). Due to this ceiling effect, we would not expect to be able to find meaningful correlations with this measure, so we do not consider it in any further analyses. All other measures seem to have a sufficient spread of scores to use in further analyses.
 
 ```{r Exp1datawrangling, include=FALSE}
 
 # Reanalysis of EEG experiment: individual differences
-df <- read.csv("../data/Results_PWI_EEG_20200526.csv", sep=";")
-colnames(df)[1] <- "Participant"
-ccpt <- fread("../data/Experience_01_CCPT.csv", select = c("sujet", "Hit_rate"))
-colnames(ccpt) <- c("Participant", "CCPT")
-ccpt <- distinct(ccpt)
-ctet <- fread("../data/CTET_Results.csv", select = c("Participant", "Hit"))
-colnames(ctet)[2] <- "CTET"
-ospan <- fread("../data/OSpan_Results.csv", select = c("Participant", "Mean_Block"))
-colnames(ospan)[2] <- "OSpan"
-rotspan <- fread("../data/RotSpan_Results.csv", select = c("Participant", "Mean_Block"))
-colnames(rotspan)[2] <- "RotSpan"
-symspan <- fread("../data/SymSpan_Results.csv", select = c("Participant", "Mean_Block"))
-colnames(symspan)[2] <- "SymSpan"
-ssrt <- fread("../data/StopSignal_Results.csv", select = c("Participant", "Mean_SSRTi"))
-colnames(ssrt)[2] <- "SSRT"
+df <- read.csv("../data/Experiment_1_data.csv")
 
-df$Participant <- as.factor(as.character(df$Participant))
-
-df$Trial.position <- as.numeric(as.character(df$Picture_ID_Multipic))
-df$Picture  <- as.factor(as.character(df$Trigger_Picture))
-
-df$Comment <- as.factor(as.character(df$Response_Trial))
-df$Condition <- as.factor(as.character(df$Trigger_Condition))
-df$Condition <- plyr::mapvalues(df$Condition, from = c("101", "102", "103","104","105"), to = c("baseline","phono.rel", "phono.unr", "sem.rel", "sem.unr"))
-df$Condition <- as.factor(as.character(df$Condition))
-
-nrow(df)
-
-table(df$Response_Trial)
-
-df2b <- df[df$Response_Trial=="correct",]
-nrow(df2b)
-nrow(df2b)-nrow(df)
-
-nrow(df) - nrow(df2b)
-
-df2b <- df2b[df2b$RT < 2301,]
-
-df3 <- df2b[!is.na(df2b$RT),]
-
-df3 <- df3 %>% select(Participant, RT, Condition, Picture, Flanker_RT_cost, Simon_RT_cost)
-
-df4 <- merge(merge(merge(merge(merge(merge(
-  df3,
-  ccpt,),
-  ctet,),
-  ospan,),
-  symspan,),
-  rotspan,),
-  ssrt, 
-  by = "Participant")
-
-colnames(df4)[5:12] <- c("Flanker RT cost", "Simon RT cost", "Conjunctive continuous\n performance", "Continuous time\n expectancy", "Operation Span", "Symmetry Span", "Rotation Span", "Stop-signal reaction time")
-
-cog_skills <- df4 %>%
+df1 <- df %>%
+  select(-1) %>%
   filter(Condition == "baseline") %>%
-  select(c(1,5:12)) %>%
-  distinct(.) #%>%
-  # pivot_longer(., cols = 2:9, names_to = "measure", values_to = "score")
+  filter(Response_Trial == "correct")
+
+colnames(df1)[6:13] <- c("Flanker RT cost", "Simon RT cost", 
+                         "Conjunctive continuous\n performance", "Continuous time\n expectancy",
+                         "Operation Span", "Symmetry Span", "Rotation Span", 
+                         "Stop-signal reaction time")
+
+cog_skills <- df1 %>%
+  select(c(1,6:13)) %>%
+  distinct(.)
 
 cog_skills_long <- cog_skills %>%
   pivot_longer(., cols = 2:9, names_to = "measure", values_to = "score")
@@ -327,7 +298,11 @@ kable(
   kable_styling()
 
 ```
+# Results
 
+## Descriptive statistics
+
+We first calculated descriptive statistics (mean and standard deviation) of all of the cognitive measures to determine whether there is a sufficient amount of variability among participants to obtain meaningful correlations with each of the measures. In Table \@ref(tab:cogskillsdesstats) we report the mean and standard deviation of each of the measures, and a histogram of the scores can be seen in Figure \@ref(fig:exp1hist). Visual inspection of the histograms suggests a ceiling effect for the conjunctive continuous performance task, which is confirmed by the descriptive statistics (*M* = `r format(round(dsc$mean[1], digits = 2), nsmall = 2)`, *SD* = `r round(dsc$sd[1],2)`). Due to this ceiling effect, we would not expect to be able to find meaningful correlations with this measure, so we do not consider it in any further analyses. All other measures seem to have a sufficient spread of scores to use in further analyses.
 
 (ref:exp1hist-figure-caption) Histogram of participants' scores on all cognitive tests. Note the difference in axes.
 
@@ -342,11 +317,11 @@ ggplot(cog_skills_long, aes(x = score, fill = measure)) +
 ```
 
 
-## Correlations among measures
+## Correlations among measures of cognitive skills
 
-Next, we report correlations among all measures to determine whether the cognitive tests thought to measure similar constructs are correlated with each other. Based on previous literature, we expected to find correlations among the inhibition measures (Simon, Flanker, and SSRT tasks) and working memory measures (operation, symmetry, and rotation span tasks). However, some previous work has not found correlations among tasks thought to measure similar skills, such as inhibition [e.g., @paap2014bilingual]; therefore, we may see only weak or no correlations among these skills. Figure \@ref(fig:cogskillscor) reports correlations between all pairs of tasks. The span tasks correlated fairly well with each other, and there was also a significant correlation between the SSRT task and the symmetry span task.
+Next, we report correlations among all measures to determine whether the cognitive tests thought to measure similar constructs are correlated with each other. Based on previous literature, we expected to find correlations among the inhibition measures (Simon, Flanker, and stop-signal reaction time tasks) and working memory measures (operation, symmetry, and rotation span tasks). However, some previous work has not found correlations among tasks thought to measure similar skills, such as inhibition [e.g., @paap2014bilingual]; therefore, we may see only weak or no correlations among these skills. Figure \@ref(fig:cogskillscor) reports correlations between all pairs of tasks. The span tasks correlated fairly well with each other, and there was also a significant correlation between the stop-signal reaction time task and the symmetry span task.
 
-(ref:cogskillscor-figure-caption) Correlations between all cognitive measures in Experiment 1. Flanker = Flanker RT cost, Simon = Simon RT cost, CTET = continuous time expectancy task, O-Span = operation span task, S-Span, R-Span = rotation span task, SSRT = stop-signal reaction time task. Significance levels: *** = < .001, ** = .01, * = .05, . = .1
+(ref:cogskillscor-figure-caption) Correlations between all cognitive measures in Experiment 1. Flanker = Flanker RT cost, Simon = Simon RT cost, CTET = continuous time expectancy task, O-Span = operation span task, S-Span = symmetry span task, R-Span = rotation span task, SSRT = stop-signal reaction time task. Significance levels: *** = < .001, ** = .01, * = .05, . = .1
 
 
 ```{r cogskillscor, fig.cap = "(ref:cogskillscor-figure-caption)", echo=FALSE, warning=FALSE, message=FALSE}
@@ -366,11 +341,11 @@ ggpairs(cog_skills_2,
 
 ```
 
-## Correlations between cognitive skills and word production speed
+## Correlations between cognitive skills and picture naming speed
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
-exgaussian <- df4 %>%
+exgaussian <- df1 %>%
   filter(Condition == "baseline") %>%
   group_by(Participant) %>%
   group_modify(~ broom::tidy(mexgauss(.$RT, n = length(.$RT)))) %>%
@@ -381,19 +356,6 @@ exgauss_cogskills <- merge(cog_skills_2, exgaussian, by = "Participant")
 exgauss_cogskills[2:8] <- map_df(exgauss_cogskills[2:8], mycenter)
 
 dat <- exgauss_cogskills[c(2:9,11)]
-
-# cor_cogskills_exg <- imap_dfr(.x = dat[1:7],
-#                             .f = ~{
-#                               id = set_names(colnames(.x))
-#                               cor_mu <- cor.test(.x, dat$mu)
-#                               cor_tau <- cor.test(.x, dat$tau)
-#                               df_all <- data.frame(
-#                                 mu_r = round(cor_mu$estimate,2),
-#                                 mu_p = round(cor_mu$p.value,2),
-#                                 tau_r = round(cor_tau$estimate,2),
-#                                 tau_p = round(cor_tau$p.value,2)
-#                               )
-#                             })
 
 cor_mu <- psych::corr.test(dat[1:7], dat$mu)
 cor_tau <- psych::corr.test(dat[1:7], dat$tau)
@@ -410,7 +372,7 @@ colnames(cor_mu_tau) <- c("mu r", "mu p", "tau r", "tau p")
 
 kable(
   cor_mu_tau,
-  caption = "Correlations between cognitive skills and mu and tau parameters of picture naming response time distributions.",
+  caption = "Correlations (r and p values) between cognitive skills and mu and tau parameters of picture naming response time distributions. Flanker = Flanker RT cost, Simon = Simon RT cost, CTET = continuous time expectancy task, O-Span = operation span task, S-Span = symmetry span task, R-Span = rotation span task, SSRT = stop-signal reaction time task.",
   booktabs = T
   ) %>%
   row_spec(0, italic = TRUE) %>%
@@ -419,40 +381,42 @@ kable(
 ```
 
 
-The correlations between the ex-gaussian parameters and measures of cognitive skills can be found in Table \@ref(tab:cormutau). Only the continuous time expectancy task correlated with the $\mu$ parameter (i.e., the mean) suggesting that higher scores on the sustained attention task corresponded to faster naming speed. No correlations were found between cognitive skills and $\tau$ (exponential). 
+The correlations between the ex-gaussian parameters and measures of cognitive skills can be found in Table \@ref(tab:cormutau). Only the continuous time expectancy task correlated significantly with the $\mu$ parameter (i.e., the mean) suggesting that higher scores on the sustained attention task corresponded to faster naming speed. No correlations were found between cognitive skills and $\tau$ (exponential). 
 
 # Discussion
 
 In Experiment 1, we tested whether several cognitive skills thought to be related to individual differences in language production correlated with other related measures (that perhaps tap into different aspects of these skills). We additionally tested whether any of these measures correlated with the $\mu$ and $\tau$ (exgaussian) parameters of the distribution of response times in a picture naming task. 
 
-We found significant correlations among the span tasks that measure working memory. However, the inhibition measures did not seem to related to each other very well, with some correlations close to zero. We did not have enough variability in the conjunctive continuous performance task that measures attention to test for a correlation with the other measure of attention (continuous time expectancy task). 
+We first found significant correlations among the span tasks that measure working memory. However, the inhibition measures did not seem to pattern all that similarly, with some correlations close to zero. We did not have enough variability in the conjunctive continuous performance task that measures attention to test for a correlation with the other measure of attention (continuous time expectancy task). 
 
-*** something about replicating Jongman et al attention correlations (did we, or was theirs with tau?) maybe discuss in a little detail... 
+We also observed a significant correlation between the $\mu$ parameter of the picture naming response time distribution and the continuous time expectancy task. This echos findings from previous work suggesting that better scores on sustained attention tasks predict faster response times in picture naming tasks [e.g., @jongman2015role; @jongman2015sustained; @jongman2017sustained]; however, those relationships were mainly found with the $\tau$ parameter, especially in comparable (simple) picture naming tasks [@jongman2015sustained; @jongman2017sustained]. In previous work, correlations between attention measures and the $\tau$ parameter have been taken as evidence that participants with poorer sustained attention abilities have more trials with longer responses, perhaps due to more frequent lapses of attention during the task. The correlation we found with $\mu$ however, suggests that participants with better sustained attention abilities were overall faster at picture naming. We note that the correlation barely reached significance (*p* = .04), so we will hold off on interpreting this relationship further until it has been replicated.
 
 # Experiment 2
 
 In Experiment 2, we test whether certain cognitive skills predict picture naming speed when participants are encouraged to respond faster, and we compare this with a non-speeded condition. 
 
-In Experiment 1, we found little support for the idea that cognitive skills predict picture naming latencies. However, the picture naming task was quite simple, and cognitive skills or resources may be more important when the task is more difficult. Some evidence for this idea comes from studies using a dual-task paradigm [e.g., @ferreira2002central]. For example, @piai2013working had participants perform picture naming and tone discrimination tasks in a dual-task paradigm. They found a relationship between a measure of updating ability (i.e., working memory, as measured by an operation span task) and participants’ picture naming speed, as well as the interference effect from the dual task: Participants with better updating or working memory abilities were faster to name pictures and were not as affected by the interference from the two tasks. @shao2012sources similarly found evidence that cognitive skills are related to picture naming speed in more demanding task conditions. For example, updating ability (also measured by an operation span task) was correlated with picture naming speed for pictures of actions but not objects. They argue that naming pictures of actions is more difficult than naming pictures of objects because actions are conceptually and grammatically more complex. 
+In Experiment 1, we found little support for the idea that cognitive skills predict picture naming latencies. However, the picture naming task was quite simple, and cognitive skills or resources may be more important when the task is more difficult. Some evidence for this idea comes from studies using a dual-task paradigm [e.g., @ferreira2002central; @jongman2015sustained]. For example, @piai2013working had participants perform picture naming and tone discrimination tasks in a dual-task paradigm. They found a relationship between a measure of updating ability (i.e., working memory, as measured by an operation span task) and participants’ picture naming speed, as well as the interference effect from the dual task: Participants with better updating or working memory abilities were faster to name pictures and were not as affected by the interference from the two tasks. @shao2012sources similarly found evidence that cognitive skills are related to picture naming speed in more demanding task conditions. For example, updating ability (also measured by an operation span task) was correlated with picture naming speed for pictures of actions but not objects. They argue that naming pictures of actions is more difficult than naming pictures of objects because actions are conceptually and grammatically more complex. 
 
-The goal of Experiment 2 is to test whether relationships between cognitive skills and word production speed is stronger when the task is more difficult. In the current study, we manipulated task difficulty by the perceived amount of time that participants have to name a picture.
+The goal of Experiment 2 is to test whether relationships between cognitive skills and word production speed are stronger when the task is more difficult. In the current study, we manipulated task difficulty by decreasing the perceived amount of time that participants have to name a picture.
 
-If more difficult tasks place higher cognitive demands on participants, we predict that better performance on cognitive skills will predict faster response times during the picture naming task in the speeded condition. We may see similar relationships in the non-speeded condition, but we expect that these relationships will be stronger in the speeded than in the non-speeded condition. Additionally, if the correlation found in Experiment 1 is not a Type I error, we expect to replicate it here.
+If more difficult tasks place higher cognitive demands on participants, we predict that better performance on cognitive skills will predict faster response times during the picture naming task in the speeded condition. We may see similar relationships in the non-speeded condition, but we expect that these relationships will be stronger in the speeded than in the non-speeded condition. Additionally, the non-speeded condition in Experiment 2 will serve as a replication of Experiment 1. 
 
-# Method
+# Methods
 
 ## Participants
 
-A total of 48 participants (ages 18-20, M = 23.2, SD = 3.5) took part in the experiment. All participants were right-handed, native speakers of German with typical hearing and no history of neurological or language disorders. Participants were either paid for their participation or received course credit. Participants were given details about the experimental procedure and gave informed consent before starting the experiment. The study received ethical approval by the ethical committee of the University of Potsdam (Germany).
+A total of 48 participants (ages 18-20, *M* = 23.2, *SD* = 3.5) took part in the experiment. All participants were right-handed, native speakers of German with typical hearing and no history of neurological or language disorders. Participants were either paid for their participation or received course credit. Participants were given details about the experimental procedure and gave informed consent before starting the experiment. The study received ethical approval by the ethical committee of the University of Potsdam (Germany).
 
 ## Procedure
-The experiment was conducted in two sessions. In the first session, participants completed a picture-word-interference task and three related tasks: a recall task, a delayed naming task, and a reading task; only the results from the picture-word-interference task are reported here. Next, we obtained the following measures of cognitive skills: the German MWT-B (Mehrfachwahl-Wortschatztest, Version B; Lehrl, 1975); the Coding subtest of the Wechsler Adult Intelligence Scale- Fourth Edition (WAIS-IV; Wechsler, 2008); the digit span forward and backward subtest of the Wechsler Memory Scale Revised (Wechsler, 1948) and the Corsi Block-Tapping Task forward and backward (Corsi, 1973). During the second session, we administered three span tasks to assess participants’ updating abilities, two tasks testing sustained attention abilities, and three tasks measuring non-selective and selective inhibition (see below for tasks descriptions).
+The experiment was conducted in two sessions. In the first session, participants completed a picture-word interference task and three related tasks: a recall task, a delayed naming task, and a word reading task; only the baseline trials from the picture-word interference task are reported here. In the second session, participants completed the same battery of cognitive tests administered in Experiment 1.
 
 ## Stimuli and task descriptions
 
 ### Picture naming task
 
-To test whether cognitive skills are more strongly related to word production speed in more difficult tasks, participants performed picture-word-interference task (as described in Experiment 1) under two conditions: a speeded and a non-speeded condition. The experiment consisted of two blocks, and each condition was administered in one block. Participants named two lists of pictures: Each list consisted of 20 training trials, 110 filler trials, and 225 test trials (order of condition and presentation of lists were counterbalanced). The structure of each block was as follows: Participants were first familiarized with the pictures and corresponding words that were used in that block of the task. Participants saw each picture displayed with its name in written form, and they were asked to read the name silently and to press a button to advance to the next picture. Participants were told they would be asked to name the pictures using the name from the familiarization phase in a later phase of the experiment. Next, participants completed a short training phase that consisted of 20 trials; training trials were not included in the analyses. After the training phase, participants completed the main picture-word-interference task. On each trial, a fixation cross was displayed on the screen for 800ms, and then the picture appeared. Participants were instructed to produce the name of the picture as fast as possible. The duration for which the item stayed on the screen depended on the experimental condition. Each block contained filler and test trials, and condition (speeded vs. non-speeded) was manipulated with the filler trials only. In each block (both speeded and non-speeded), the picture on each test trial stayed on the screen for 1200ms, but the duration varied for the filler trials. In the non-speeded condition, the pictures on the filler trials stayed on the screen for 1200ms, just like the test trials. However, in the speeded condition, the pictures on the filler trials stayed on the screen for a shorter duration that varied between 400 and 600ms. Only the test trials were analyzed; the purpose of the filler trials was to manipulate the perceived amount of time that participants were given to name the picture. This ensured that the naming latencies that were compared across blocks were based on the same type of trials.
+To test whether cognitive skills are more strongly related to word production speed in more difficult tasks, participants performed picture-word interference task (as described in Experiment 1) under two conditions: a speeded and a non-speeded condition. Again, only the baseline trials (with Xs) were included in the analyses of the present experiment. The experiment consisted of two blocks, and each condition was administered in one block. Participants named two lists of pictures: Each list consisted of 20 training trials, 110 filler trials, and 225 test trials (order of condition and presentation of lists were counterbalanced). The structure of each block was as follows: Participants were first familiarized with the pictures and corresponding words that were used in that block of the task. Participants saw each picture displayed with its name in written form, and they were asked to read the name silently and to press a button to advance to the next picture. Participants were told they would be asked to name the pictures using the name from the familiarization phase in a later phase of the experiment. Next, participants completed a short training phase that consisted of 20 trials; training trials were not included in the analyses. 
+
+After the training phase, participants completed the main picture-word interference task. On each trial, a fixation cross was displayed on the screen for 800ms, and then the picture appeared. Participants were instructed to produce the name of the picture as fast as possible. The duration for which the item stayed on the screen depended on the experimental condition. Each block contained filler and test trials, and condition (speeded vs. non-speeded) was manipulated with the filler trials only. In each block (both speeded and non-speeded), the picture on each test trial stayed on the screen for 1200ms, but the duration varied for the filler trials. In the non-speeded condition, the pictures on the filler trials stayed on the screen for 1200ms, just like the test trials. However, in the speeded condition, the pictures on the filler trials stayed on the screen for a shorter duration that varied between 400 and 600ms. Only the test trials were analyzed; the purpose of the filler trials was to manipulate the perceived amount of time that participants were given to name the picture. This ensured that the naming latencies that were compared across blocks were based on the same type of trials.
 
 ### Cognitive skills
 
@@ -460,40 +424,39 @@ We used the same battery of cognitive tests that were used in Experiment 1 and c
 
 ## Analyses
 
-The analyses were idential to Experiment 1, except the exgaussian parameters were calculated for each condition (speeded vs. non-speeded) separately. We first report descriptive statistics, then correlations of cognitive measures with each other, and finally, correlations between cognitive measures and mu and tau parameters from the response time distribution.
+The analyses were identical to Experiment 1, except the exgaussian parameters were calculated for each condition (speeded vs. non-speeded) separately. Again, only trials with correct responses in the picture naming task were included in the analyses. We report descriptive statistics, correlations of cognitive measures with each other, a comparison of response times in the speeded and non-speeded conditions, and finally, correlations between cognitive measures and $\mu$ and $\tau$ parameters from the response time distribution.
 
 # Results
 
 ```{r Exp 2 data wrangling, include=FALSE}
 exp2 <- read.csv("../data/Experiment_2_data.csv", sep=",")
 
-exp2$Accuracy <- as.factor(as.character(exp2$Response_Trial))
 exp2$Participant <- as.factor(as.character(exp2$Participant_ID))
 
 exp2$Picture  <- as.factor(as.character(exp2$Picture_Name))
 
-exp2$Comment <- as.factor(as.character(exp2$Response_Trial))
+# exp2$Comment <- as.factor(as.character(exp2$Response_Trial))
 exp2$Condition <- as.factor(as.character(exp2$Condition_ID))
 exp2$Condition <- plyr::mapvalues(exp2$Condition, from = c("9001", "9002", "9003","9004","9005"), to = c("baseline","phono.rel", "phono.unr", "sem.rel", "sem.unr"))
 exp2$Condition <- as.factor(as.character(exp2$Condition))
 exp2$Speed <- ifelse(exp2$Type_Speed == 3001, "normal", "fast")
 
-df5 <- exp2 %>%
+df2 <- exp2 %>%
   filter(Response_Trial == "correct", RT != "NA")
 
-df5 <- df5 %>% select(Participant, RT, Condition, Picture, Speed, Flanker_Cost, Simon_Cost, CCPT_Hit_rate, CTET_Hit_rate, Ospan_PCU, Symspan_PCU, Rotspan_PCU, SSRTi)
+df2 <- df2 %>% select(Participant, RT, Condition, Picture, Speed, Flanker_Cost, Simon_Cost, CCPT_Hit_rate, CTET_Hit_rate, Ospan_PCU, Symspan_PCU, Rotspan_PCU, SSRTi)
 
-colnames(df5)[6:13] <- c("Flanker RT cost", "Simon RT cost", "Conjunctive continuous\n performance", "Continuous time\n expectancy", "Operation Span", "Symmetry Span", "Rotation Span", "Stop-signal reaction time")
+colnames(df2)[6:13] <- c("Flanker RT cost", "Simon RT cost", "Conjunctive continuous\n performance", "Continuous time\n expectancy", "Operation Span", "Symmetry Span", "Rotation Span", "Stop-signal reaction time")
 
-cog_skills_exp2 <- df5 %>%
+cog_skills_exp2 <- df2 %>%
   select(-c(RT, Condition, Picture, Speed)) %>%
   distinct(.)
+
 cog_skills_exp2_long <- cog_skills_exp2 %>% pivot_longer(., cols = 2:9, names_to = "measure", values_to = "score")
 
 ```
 
 
-We first report descriptive statistics on all cognitive measures. Similar to Experiment 1, we want to ensure we have enough variability among participants to find meaningful correlations with the measures. Means and standard deviations for each measure can be found in Table \@ref(tab:cogskillsdesstatsE2), and histograms in Figure \@ref(fig:exp2hist). Similar to Experiment 1, we see a ceiling effect for the conjunctive continuous performance task, although there is slightly more variability than in Experiment 1. This is mostly due to one participant who has a much lower score; however, this participant did not consistently score low on all measures; therefore, we assume the participant was indeed doing the tasks in good faith. As in Experiment 1, we will not include this measure in the following analyses.
 
 ```{r cogskillsdesstatsE2, echo=FALSE, warning=FALSE, message=FALSE}
 dscE2 <- cog_skills_exp2_long %>%
@@ -526,6 +489,10 @@ kable(
 
 ```
 
+## Descriptive statistics 
+
+We first report descriptive statistics on all cognitive measures. Similar to Experiment 1, we want to ensure we have enough variability among participants to find meaningful correlations with the measures. Means and standard deviations for each measure can be found in Table \@ref(tab:cogskillsdesstatsE2), and histograms in Figure \@ref(fig:exp2hist). Similar to Experiment 1, we see a ceiling effect for the conjunctive continuous performance task (*M* = `r dscE2$mean[1]`, *SD* = `r dscE2$sd[1]`), although there is slightly more variability than in Experiment 1. This is mostly due to one participant who has a much lower score; however, this participant did not consistently score low on all measures; therefore, we assume the participant was indeed doing the tasks in good faith. As in Experiment 1, we will not include this measure in the following analyses.
+
 (ref:exp2hist-figure-caption) Histogram of participants' scores on all cognitive tests. Note the difference in axes.
 
 ```{r exp2hist, fig.cap = "(ref:exp2hist-figure-caption)", echo=FALSE, warning=FALSE, message=FALSE}
@@ -538,9 +505,11 @@ ggplot(cog_skills_exp2_long, aes(x = score, fill = measure)) +
   theme(plot.margin = unit(c(.25,.25,.25,.25), "cm"))
 ```
 
+## Correlations among measures of cognitive skills
+
 Next, we computed the correlations of all the cognitive measures with each other, just as we did in Experiment 1. All correlations can be found in Figure \@ref(fig:cogskillscorE2). Here we see more significant correlations: The working memory (span task) measures patterned together again, the continuous time expectancy task correlated moderately with the span tasks, and the stop-signal reaction time task correlated with the Simon task (another measure of inhibition), as well as two of the span tasks.
 
-(ref:cogskillscorE2-figure-caption) Correlations between all cognitive measures in Experiment 2. Flanker = Flanker RT cost, Simon = Simon RT cost, CTET = continuous time expectancy task, O-Span = operation span task, S-Span, R-Span = rotation span task, SSRT = stop-signal reaction time task. Significance levels: *** = < .001, ** = .01, * = .05, . = .1
+(ref:cogskillscorE2-figure-caption) Correlations between all cognitive measures in Experiment 2. Flanker = Flanker RT cost, Simon = Simon RT cost, CTET = continuous time expectancy task, O-Span = operation span task, S-Span = symmetry span task, R-Span = rotation span task, SSRT = stop-signal reaction time task. Significance levels: *** = < .001, ** = .01, * = .05, . = .1
 
 ```{r cogskillscorE2, fig.cap = "(ref:cogskillscorE2-figure-caption)", echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -561,9 +530,83 @@ ggpairs(cog_skills_exp2_2,
 ```
 
 
+## Naming latencies in the speeded and non-speeded conditions
+
+Because we only manipulated the perceived amount of time participants had to respond in the speeded condition, we first wanted to make sure that this manipulation did indeed encourage participants to respond faster. To test this, we fit a linear mixed effects model that predicted response time on the millisecond scale.^[We also fit a model that predicted response time on the log scale and the results were similar.] The model included a fixed effect of speed condition (deviation coded: speeded = -.5, non-speeded = .5), by-participant random intercepts and slopes for speed condition, and by-item random intercepts. Results are displayed in Table \@ref(tab:exp2speed) and Figure \@ref(fig:exp2speedfig). There was a significant main effect of speed condition, with responses being about 36ms faster in the speeded condition. This suggests that our manipulation did indeed encourage participants to respond faster in the speeded condition.
+
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
-exgaussianE2 <- df5 %>%
+df3 <- df2 %>%
+  filter(Condition == "baseline") %>%
+  select(Participant, RT, Picture, Speed)
+
+df3$Speed <- as.factor(df3$Speed)
+contrasts(df3$Speed) <- c(-.5,.5)
+
+m_speed <- lmer(log(RT) ~ Speed + (Speed|Participant) + (1|Picture),
+                data = df3)
+
+m_speed_raw <- lmer(RT ~ Speed + (Speed|Participant) + (1|Picture),
+                data = df3)
+
+```
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+exp2_speed <- tidy(m_speed_raw)
+
+exp2_speed <- exp2_speed %>%
+  filter(effect == "fixed") %>%
+  select(-c(effect, group, df)) %>%
+  mutate(p.value = round(p.value, digits = 2)) %>%
+  mutate(estimate = round(estimate, digits = 0)) %>%
+  mutate(std.error = round(std.error, digits = 0)) %>%
+  mutate(p.value = ifelse(p.value < .001, "<.001", p.value))
+
+labels_exp2_speed <- c("Intercept", "Speed Condition")
+
+exp2_speed$term <- plyr::mapvalues(exp2_speed$term, exp2_speed$term, labels_exp2_speed)
+
+```
+
+
+```{r exp2speed, echo=FALSE, warning=FALSE, message=FALSE}
+kable(
+  exp2_speed, 
+  col.names = c("Predictor", "Estimate", "SE", "t", "p"),
+  digits = 2,
+  # longtable = T,
+  caption = "Model comparing picture naming latencies in the speeded and non-speeded conditions on the millisecond scale. Responses in the non-speeded condition were about 36ms slower than in the speeded condition.",
+  booktabs = T
+  ) %>%
+  row_spec(0,italic = TRUE) %>%
+  kable_styling()
+```
+
+(ref:exp2speedfig-figure-caption) Speed of responses on the picture naming task in the speeded and non-speeded conditions.
+
+```{r exp2speedfig, fig.cap = "(ref:exp2speedfig-figure-caption)", fig.dim = c(5, 4), echo=FALSE, warning=FALSE, message=FALSE}
+
+df3_sum <- df3 %>%
+  group_by(Participant, Speed) %>%
+  summarize(RT = mean(RT))
+
+
+df3_plot <- Rmisc::summarySE(df3_sum, measurevar = "RT", groupvars = "Speed")
+
+ggplot(df3_sum, aes(x = Speed, y = RT)) + 
+  geom_jitter(width = .1, alpha = .5, color = "#440154FF") +
+  geom_point(data = df3_plot, aes(x = Speed, y = RT), size = 4) +
+  geom_errorbar(data = df3_plot, aes(ymin = RT - ci, ymax = RT + ci), width = 0) +
+  labs(title="", x = "Speed condition", y = "Response time") +
+  scale_x_discrete(labels = c("Speeded", "Non-speeded"))
+
+```
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+exgaussianE2 <- df2 %>%
   filter(Condition == "baseline" & Speed == "normal") %>%
   group_by(Participant) %>%
   group_modify(~ broom::tidy(mexgauss(.$RT, n = length(.$RT)))) %>%
@@ -591,7 +634,7 @@ colnames(cor_mu_tauE2) <- c("mu r", "mu p", "tau r", "tau p")
 
 kable(
   cor_mu_tauE2,
-  caption = "Correlations between cognitive skills and mu and tau parameters of picture naming response time distributions in the non-speeded condition of Experiment 2.",
+  caption = "Correlations between cognitive skills (r and p values) and mu and tau parameters of picture naming response time distributions in the non-speeded condition of Experiment 2. Flanker = Flanker RT cost, Simon = Simon RT cost, CTET = continuous time expectancy task, O-Span = operation span task, S-Span = symmetry span task, R-Span = rotation span task, SSRT = stop-signal reaction time task.",
   booktabs = T
   ) %>%
   row_spec(0, italic = TRUE) %>%
@@ -599,9 +642,13 @@ kable(
 
 ```
 
+## Correlations between cognitive skills and picture naming speed
+
+Finally, we tested the correlations between the mu and tau parameters of the picture naming response time distributions and the measures of cognitive skills. Results from the non-speeded task can be found in Table \@ref(tab:cormutauE2), and results from the speeded task are shown in Table \@ref(tab:cormutauE2s). We did not find any significant correlations in either condition. 
+
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
-exgaussianE2_s <- df5 %>%
+exgaussianE2_s <- df2 %>%
   filter(Condition == "baseline" & Speed == "fast") %>%
   group_by(Participant) %>%
   group_modify(~ broom::tidy(mexgauss(.$RT, n = length(.$RT)))) %>%
@@ -630,7 +677,7 @@ colnames(cor_mu_tauE2_s) <- c("mu r", "mu p", "tau r", "tau p")
 
 kable(
   cor_mu_tauE2_s,
-  caption = "Correlations between cognitive skills and mu and tau parameters of picture naming response time distributions in the speeded condition of Experiment 2.",
+  caption = "Correlations between cognitive skills (r and p values) and mu and tau parameters of picture naming response time distributions in the speeded condition of Experiment 2. Flanker = Flanker RT cost, Simon = Simon RT cost, CTET = continuous time expectancy task, O-Span = operation span task, S-Span = symmetry span task, R-Span = rotation span task, SSRT = stop-signal reaction time task.",
   booktabs = T
   ) %>%
   row_spec(0, italic = TRUE) %>%
@@ -638,7 +685,70 @@ kable(
 
 ```
 
+# Discussion
 
+The descriptive statistics and correlations between cognitive measures were fairly similar to those found in Experiment 1, the only difference being that we found more significant correlations between cognitive measures than in the first experiment.
+
+We also tested our manipulation of task difficulty (the speeded condition) in the picture naming task. We found that participants were indeed faster in the speeded block, suggesting our manipulation was successful in encouraging participants to respond faster. 
+
+We additionally tested correlations between the measures of cognitive skills and the mu and tau parameters of participants' response time distributions on the picture naming task in both the speeded and non-speeded conditions. In Experiment 1, we saw a significant correlation between the continuous time expectancy task (a measure of sustained attention) and the mu parameter of the picture naming latencies. The non-speeded condition of Experiment 2 provided us an opportunity to replicate this finding because the tasks and materials were the same across the two experiments. However, we did not replicate the correlation between sustained attention and the mu parameter in the non-speeded condition of Experiment 2. In fact, we did not find any significant correlations between the cognitive skills measures and the picture naming parameters in either condition. 
+
+We predicted that we would see stronger relationships between cognitive skills and the picture naming measures in the speeded condition of the task because we assumed that time pressure would increase the difficulty of the task. Several previous studies have found stronger relationships between cognitive skills and language production measures when the task was more difficult, for example in dual tasks [@jongman2015sustained; @piai2013working] or with more difficult stimuli [actions vs. objects, @shao2012sources, @shao2013selective]. One possibility for why we did not see this pattern in the current experiments is because the task difficulty may not have been the right type of difficulty. Although our participants had to respond faster, it is possible that we might need to manipulate difficulty in a different way, for example with more difficult items to name, as in @shao2012sources. It is however, intuitive that naming pictures faster would more strongly recruit cognitive resources such as the ones tested here, but this relationship may be specific to the exact tasks employed in the experiment.
+
+# General discussion
+
+In the current study, we originally set out to better understand individual differences in language production, specifically relationships between cognitive skills and picture naming speed. Previous studies have found correlations between measures of language production and cognitive skills such as attention, inhibition, and working memory [e.g., @jongman2015sustained; @piai2013working; @shao2012sources; @shao2013selective]. These skills can be measured with a wide variety of tasks, and some of the outcome measures from these tasks, even for tasks that are thought to tap into the same skills, do not correlate strongly with each other (if at all). This suggests that these tasks tap into different components of these skills. Thus, our goal was to measure these cognitive skills with a variety of tasks to test whether certain components of these skills are more strongly related to individual differences in language production.
+
+Ultimately, we did not find convincing relationships between measures of cognitive skills and language production. In two different experiments that used the same stimuli and materials, we found only one significant correlation, which was between sustained attention and participants' mean picture naming speed. However, we did not replicate this significant correlation in the second experiment. This underscores the importance of replication: If we had only conducted the first experiment, we would likely have based conclusions on this significant correlation. There are a few possible reasons why we did not see a significant correlation in the second experiment. An easy explanation is that the effect in Experiment 1 may have been a Type I error. It is also possible that the relationship found in Experiment 1 is real but we did not have enough power in our design to detect it in Experiment 2. We think this is unlikely given that we had a comparable (actually slightly larger) sample size in Experiment 2. We discuss issues of statistical power further below.
+
+Another possibility is that the task instructions in the second experiment encouraged participants to attend to the picture naming task more strongly. Specifically, participants were told that some trials would go by faster than others. It is therefore possible that the participants with poorer attentional abilities as measured by the continuous time expectancy task were able to overcome their limited attention skills and by concentrating harder on the picture naming task. Although this interpretation is possible, we are skeptical of it for two main reasons. First, we computed participants' picture naming speed separately for the speeded and non-speeded blocks of the experiment. Therefore, we would assume that the correlation should still surface for the non-speeded trials of Experiment 2 because the materials were identical to Experiment 1. Second, the distributions of scores for the continuous time expectancy task and the $\mu$ parameter of the non-speeded task were similar between the two experiments (see Figure \@ref(fig:corr1and2)), but the correlation was no longer significant in Experiment 2. Finally, if this explanation were true, it suggests that sustained attention (at least the type that can be applied during a picture naming task) is not necessarily an ability, but rather a strategy that participants can decide to deploy or not. This would call into question the role of sustained attention for language production.
+
+(ref:corr1and2-figure-caption) Correlations between the continuous time expectancy task and the $\mu$ ex-gaussian parameter from participants' picture naming response time distributions in Experiment 1 (left) and the non-speeded condition of Experiment 2 (right).
+
+```{r corr1and2, fig.cap = "(ref:corr1and2-figure-caption)", fig.dim = c(9, 3.5), echo=FALSE, warning=FALSE, message=FALSE}
+
+exp1corr <- ggplot(exgauss_cogskills, aes(CTET, mu)) +
+  geom_point(color = "#440154FF", alpha = .5, size = 5) +
+  geom_smooth(method = "lm", size = .5, color = "black") +
+  labs(x = "", y = "Picture naming response time:\nmu parameter\n")
+
+exp1corr1 <- ggMarginal(exp1corr, type = "histogram")
+
+exp2corr <- ggplot(exgauss_cogskillsE2, aes(CTET, mu)) +
+  geom_point(color = "#440154FF", alpha = .5, size = 5) +
+  geom_smooth(method = "lm", size = .5, color = "black") +
+  labs(x = "", y = "")
+
+exp2corr1 <- ggMarginal(exp2corr, type = "histogram")
+
+plot_row <- plot_grid(exp1corr1, exp2corr1, labels = c('Exp. 1', 'Exp. 2'), align = "hv")
+
+ xlabel <- ggdraw() + 
+  draw_label(
+    "Continuous time expectancy task (scaled score)",
+    size = 12
+  ) 
+
+plot_grid(
+  plot_row, xlabel,
+  nrow = 2,
+  rel_heights = c(1, 0.05)
+)
+
+```
+
+
+An issue related to statistical power is that of reliability of measures [@parsons2019psychological]. Recent work has shown that tasks that consistently produce robust experimental effects, such as several conflict tasks thought to measure inhibition (e.g., Flanker, Stroop), have relatively low test-retest reliability [@hedge2018reliability]. That is, participants' scores at one time point are not necessarily highly correlated with their scores at a different time point. 
+
+One potential issue in the current study and others that have correlated measures of cognitive skills with picture naming speed is that we currently do not have good estimates of reliability of picture naming measures over time (that we are aware of). Shao and colleagues [-@shao2012sources; -@shao2013selective; -@shao2014electrophysiological] have reported either split-half reliability (reliability within an experimental session, e.g., the correlation of even and odd experimental trials) or the correlation between two different types of stimuli (actions and objects), and they have typically found high correlations. This is good, but since we do not currently have estimates of test-retest reliability, we do not know, for example, whether the slow speakers in our sample are slow whenever they are tested (i.e., a skill specific to the individual), or if speed of production is a result of other factors such as how tired or alert the individual felt during the testing session. The question of reliability of picture naming measures has theoretical relevance for interpreting correlational studies such as the current study. If we claim that individuals with higher attention or inhibition abilities are faster speakers, we are also making the implicit assumption that these individuals are consistently faster speakers.
+
+Having estimates of reliability is also crucial for questions of sample size and statistical power for correlational studies. For instance, if we correlate two measures that each have relatively low reliability (and likely also high measurement error), this will limit the magnitude of correlations we can find *between* the two measures. If we take the one significant correlation we found in Experiment 1, which was -.31 (assuming this is the true effect size), and we assume each measure (sustained attention and the mu parameter of the picture naming response time distribution) has a reliability of .8, we would still need a sample size of 124 to detect a significant correlation with 80% power at an alpha level of .05 [@hedge2018reliability; @parsons2019psychological]. This is much larger than typical sample sizes in this field of research, so it is imperative that future work take issues such as reliability into consideration. We are currently working on a project to establish reliability of picture naming measures.
+
+Finally, there simply might not be strong relationships between measures of cognitive skills and picture naming speed. Of course a non-significant correlation does not mean there is *no* relationship between the measures. Nonetheless, it is possible that any true relationships between these skills are very small, and there may be more effective ways to understand the involvement of cognitive skills or resources in language production. Naming a picture presented on a screen is a fairly simple task, and the cognitive skills or resources needed to complete this task may not be the same ones involved in, for instance, an operation span task, in which participants have to keep words or letters in mind while solving math problems. More ecologically valid experimental settings, such as speaking and driving simultaneously, may be a promising avenue for better understanding the involvement of cognitive skills or resources in speaking [e.g., @becic2010brief; @dromey2019bidirectional; @kubose2006effects].
+
+# Conclusions
+
+Our aim in this study was to build on previous work showing that measures of working memory, inhibition, and attention correlate with picture naming speed. Specifically, we tested whether we would see significant relationships between picture naming speed and measures from a wider battery of cognitive tasks that tap into different components of these cognitive skills. We found one significant correlation but did not replicate this in a second experiment. We argue that we need better estimates of reliability of picture naming for testing for correlations with other skills, as well as more ecologically valid paradigms for testing the necessity of cognitive skills while speaking.
 
 \clearpage
 
